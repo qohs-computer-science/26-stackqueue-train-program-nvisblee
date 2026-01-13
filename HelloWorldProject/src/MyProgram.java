@@ -1,9 +1,10 @@
 /*
- * TODO: Name
- * TODO: Date
- * TODO: Class Period
- * TODO: Program Description
+ * TODO: arun
+ * TODO: 1/12
+ * TODO: 4
+ * TODO: Implement the train station program to read from a file, manage train cars using stacks and queues
  */
+
 import java.util.Scanner;
 import java.io.File;
 import java.util.Stack;
@@ -11,101 +12,181 @@ import java.util.Queue;
 import java.util.LinkedList;
 
 public class MyProgram {
-	public static int val = 0;
 
-	public static void main(String[] args) {
+    // Used to generate unique auto engine IDs
+    public static int val = 0;
 
-		int limitTrackA = 100000, limitTrackB = 100000, limitTrackC = 100000;
-		int overweightLimit = 40000;
+    public static void main(String[] args) {
 
-		Stack<Train> trackA = new Stack<Train>();
-		Stack<Train> trackB = new Stack<Train>();
-		Stack<Train> trackC = new Stack<Train>();
+        int limitTrackA = 100000, limitTrackB = 100000, limitTrackC = 100000;
+        int overweightLimit = 40000;
 
-		Queue<Train> otherDest = new LinkedList<Train>();
-		Queue<Train> overweightQ = new LinkedList<Train>();
+        Stack<Train> trackA = new Stack<>();
+        Stack<Train> trackB = new Stack<>();
+        Stack<Train> trackC = new Stack<>();
 
-		Scanner x = new Scanner(System.in);
-		try{
-			File f = new File("HelloWorldProject/src/data.txt");
-			x = new Scanner (f);
+        Queue<Train> otherDest = new LinkedList<>();
+        Queue<Train> overweightQ = new LinkedList<>();
 
-			String name = x.nextLine();
-			System.out.println(name);
+        // Use try-with-resources so the scanner always closes correctly
+        try (Scanner x = new Scanner(new File("HelloWorldProject/src/data.txt"))) {
 
-			while (x.hasNextLine()) {
+            while (x.hasNextLine()) {
 
-				String line = x.nextLine().trim();
+                String line = x.nextLine();
 
-				if (line.equals("END")) {
-					break;
-				}
+                if (line.length() == 0) {
+                    continue;
+                }
 
-				if (line.startsWith("CAR")) {
+                if (line.equals("END")) {
+                    break;
+                }
 
-					String carID = line;
-					String contents = x.nextLine().trim();
-					String originCity = x.nextLine().trim();
-					String destCity = x.nextLine().trim();
-					int weight = Integer.parseInt(x.nextLine().trim());
-					int miles = Integer.parseInt(x.nextLine().trim());
+                if (line.startsWith("CAR")) {
 
-					Train car = new Train(carID, contents, originCity, destCity, weight, miles);
+                    String carID = line;
 
-					if (car.getWeight() > overweightLimit) {
-						overweightQ.add(car);
-					}
-					else if (destCity.equals("Baltimore")) {
-						addCarToTrackWithLimit(car, trackA, limitTrackA, "Baltimore");
-					}
-					else if (destCity.equals("Charlotte")) {
-						addCarToTrackWithLimit(car, trackB, limitTrackB, "Charlotte");
-					}
-					else if (destCity.equals("Trenton")) {
-						addCarToTrackWithLimit(car, trackC, limitTrackC, "Trenton");
-					}
-					else {
-						otherDest.add(car);
-					}
-				}
+                    if (!x.hasNextLine());
+                    String contents = x.nextLine();
 
-				else if (line.startsWith("ENG")) {
+                    if (!x.hasNextLine()) ;
+                    String originCity = x.nextLine();
 
-					String engineID = line;
-					String city = x.nextLine().trim();
+                    if (!x.hasNextLine());
+                    String destCity = x.nextLine();
 
-					if (city.equals("Baltimore")) {
-						sendEngine(engineID, "Baltimore", trackA);
-					}
-					else if (city.equals("Charlotte")) {
-						sendEngine(engineID, "Charlotte", trackB);
-					}
-					else if (city.equals("Trenton")) {
-						sendEngine(engineID, "Trenton", trackC);
-					}
-				}
-			}
+                    if (!x.hasNextLine());
+                    int weight = Integer.parseInt(x.nextLine());
 
-			printStationStatus(trackA, trackB, trackC, otherDest, overweightQ);
-		}
-		catch(Exception e)
-		{
-			System.out.println(e.getMessage());
-		}
+                    if (!x.hasNextLine());
+                    int miles = Integer.parseInt(x.nextLine());
 
-		x.close();
-	}
+                    Train car = new Train(carID, contents, originCity, destCity, weight, miles);
 
-	private static void addCarToTrackWithLimit(Train car, Stack<Train> track, int limit, String cityName) {
+                    if (car.getWeight() > overweightLimit) {
+                        overweightQ.add(car);
+                    } else if (destCity.equals("Baltimore")) {
+                        addCarToTrackWithLimit(car, trackA, limitTrackA, "Baltimore");
+                    } else if (destCity.equals("Charlotte")) {
+                        addCarToTrackWithLimit(car, trackB, limitTrackB, "Charlotte");
+                    } else if (destCity.equals("Trenton")) {
+                        addCarToTrackWithLimit(car, trackC, limitTrackC, "Trenton");
+                    } else {
+                        otherDest.add(car);
+                    }
 
-		int currentWeight = getTotalWeight(track);
+                } else if (line.startsWith("ENG")) {
 
-		if (currentWeight + car.getWeight() > limit) {
-			String autoEngineID = "ENG" + String.format("%05d", val);
-			val++;
-			sendEngine(autoEngineID, cityName, track);
-		}
+                    String engineID = line;
 
-		track.push(car);
-	}
-}
+                    if (!x.hasNextLine());
+                    String city = x.nextLine();
+
+                    if (city.equals("Baltimore")) {
+                        sendEngine(engineID, "Baltimore", trackA);
+                    } else if (city.equals("Charlotte")) {
+                        sendEngine(engineID, "Charlotte", trackB);
+                    } else if (city.equals("Trenton")) {
+                        sendEngine(engineID, "Trenton", trackC);
+                    } else {
+                        // If engine city is unknown, you can ignore or print a message
+                        System.out.println(engineID + " has unknown destination city: " + city);
+                    }
+                }
+            }
+
+            // Print remaining cars at the station
+            printStationStatus(trackA, trackB, trackC, otherDest, overweightQ);
+
+            // Auto-send remaining stacks
+            if (!trackA.isEmpty()) {
+                sendEngine(nextAutoEngineId(), "Baltimore", trackA);
+            }
+            if (!trackB.isEmpty()) {
+                sendEngine(nextAutoEngineId(), "Charlotte", trackB);
+            }
+            if (!trackC.isEmpty()) {
+                sendEngine(nextAutoEngineId(), "Trenton", trackC);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error reading file or processing data:");
+            e.printStackTrace();
+        }
+    }
+
+    private static int nextAutoEngineId() {
+        
+        return "ENG00000";
+    }
+
+    private static void addCarToTrackWithLimit(Train car, Stack<Train> track, int limit, String cityName) {
+
+        int currentWeight = getTotalWeight(track);
+
+        // If adding this car would exceed the limit, dispatch current cars first
+        if (currentWeight + car.getWeight() > limit && !track.isEmpty()) {
+            sendEngine(nextAutoEngineId(), cityName, track);
+        }
+
+        track.push(car);
+    }
+
+    private static int getTotalWeight(Stack<Train> track) {
+        int sum = 0;
+        for (Train t : track) {
+            sum += t.getWeight();
+        }
+        return sum;
+    }
+
+    private static void sendEngine(String engineID, String cityName, Stack<Train> track) {
+
+        System.out.println(engineID + " leaving for " + cityName + " with the following cars:");
+
+        while (!track.isEmpty()) {
+            Train car = track.pop();
+            System.out.println(car.toString());
+        }
+    }
+
+    private static void printStationStatus(Stack<Train> trackA, Stack<Train> trackB, Stack<Train> trackC,
+                                           Queue<Train> otherDest, Queue<Train> overweightQ) {
+
+        System.out.println("Baltimore");
+        printStack(trackA);
+
+        System.out.println("Charlotte");
+        printStack(trackB);
+
+        System.out.println("Trenton");
+        printStack(trackC);
+
+        System.out.println("Other Destinations");
+        printQueue(otherDest);
+
+        System.out.println("Overweight");
+        printQueue(overweightQ);
+    }
+
+    private static void printStack(Stack<Train> track) {
+        if (track.isEmpty()) {
+            System.out.println("[empty]");
+        } else {
+            for (Train t : track) {
+                System.out.println(t.getCarID() + " - " + t.getWeight());
+            }
+        }
+    }
+
+    private static void printQueue(Queue<Train> q) {
+        if (q.isEmpty()) {
+            System.out.println("[empty]");
+        } else {
+            for (Train t : q) {
+                System.out.println(t.getCarID() + " - " + t.getWeight());
+            }
+        }
+    } // end of MyProgram class
+} // end of MyProgram class
